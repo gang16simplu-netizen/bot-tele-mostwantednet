@@ -3,7 +3,8 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, CallbackQueryHandler, MessageHandler, filters
 
 # CONFIGURARE FINALĂ
-TOKEN = "8837103187:AAHPE0rfjk2L2w8XnsvewMz6HxxgHMvoids"
+TOKEN = "import os⁠
+⁠TOKEN = os.environ.get("TOKEN")⁠"
 ADMIN_ID = 8201035899
 STAFF_GROUP_ID = -1003936586656
 MAIN_GROUP_ID = -1003864809495
