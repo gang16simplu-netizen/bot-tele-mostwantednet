@@ -10,45 +10,42 @@ from telegram.ext import (
 # Configurare logare
 logging.basicConfig(level=logging.INFO)
 
-# Inițializare variabile
-TOTP_SECRET = os.environ.get("TOTP_SECRET")
-totp = pyotp.TOTP(TOTP_SECRET)
+# Inițializare cheie TOTP - asigură-te că variabila TOTP_SECRET este setată în Railway
+SECRET = os.environ.get("TOTP_SECRET")
+totp = pyotp.TOTP(SECRET)
 WAITING_FOR_PASS = 1
 
-# Funcție pentru salvarea în baza de date simplă
+# Funcție pentru salvarea în baza de date
 def log_to_file(user_id, username, status):
     with open("baza_date.txt", "a") as f:
         f.write(f"{user_id} | {username} | {status}\n")
 
-# --- Funcții Autentificare Admin ---
+# --- Comenzi ---
 async def start_admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Introdu codul de 6 cifre din Google Authenticator:")
+    await update.message.reply_text("Introdu codul de 6 cifre:")
     return WAITING_FOR_PASS
 
 async def check_totp(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_code = update.message.text
     if totp.verify(user_code):
-        try:
+        if os.path.exists("baza_date.txt"):
             with open("baza_date.txt", "rb") as f:
                 await update.message.reply_document(document=f)
-            await update.message.reply_text("Autentificare reușită. Iată baza de date.")
-        except FileNotFoundError:
+        else:
             await update.message.reply_text("Baza de date este goală.")
     else:
-        await update.message.reply_text("Cod incorect! Încearcă din nou.")
+        await update.message.reply_text("Cod incorect!")
     return ConversationHandler.END
 
-# --- Exemplu de utilizare în bot ---
 async def start_kyc(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # Aici ar veni logica ta de primire poze/date
     log_to_file(update.effective_user.id, update.effective_user.username, "In asteptare")
-    await update.message.reply_text("Datele au fost salvate. Așteaptă aprobarea.")
+    await update.message.reply_text("Datele au fost salvate.")
 
-# --- Configurare Aplicație ---
 if __name__ == '__main__':
-    app = ApplicationBuilder().token(os.environ.get("TOKEN")).build()
+    # Token-ul trebuie să fie în variabilele de mediu din Railway
+    TOKEN = os.environ.get("TOKEN")
+    app = ApplicationBuilder().token(TOKEN).build()
 
-    # ConversationHandler pentru /admin
     admin_conv = ConversationHandler(
         entry_points=[CommandHandler("admin", start_admin)],
         states={WAITING_FOR_PASS: [MessageHandler(filters.TEXT & ~filters.COMMAND, check_totp)]},
